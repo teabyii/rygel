@@ -1,7 +1,7 @@
 // Copyright 2023 Niels Martignène <niels.martignene@protonmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
-// this software and associated documentation files (the “Software”), to deal in 
+// this software and associated documentation files (the “Software”), to deal in
 // the Software without restriction, including without limitation the rights to use,
 // copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
 // Software, and to permit persons to whom the Software is furnished to do so,
@@ -25,52 +25,56 @@
 #include <string.h>
 #include <stdarg.h>
 #if __has_include(<uchar.h>)
-    #include <uchar.h>
+#include <uchar.h>
 #else
-    typedef uint16_t char16_t;
-    typedef uint32_t char32_t;
+typedef uint16_t char16_t;
+typedef uint32_t char32_t;
 #endif
 #ifdef _WIN32
-    #define NOMINMAX
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #else
-    #include <unistd.h>
-    #include <errno.h>
-    #include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
 #endif
 
 #ifdef _WIN32
-    #define EXPORT __declspec(dllexport)
+#define EXPORT __declspec(dllexport)
 #else
-    #define EXPORT __attribute__((visibility("default")))
+#define EXPORT __attribute__((visibility("default")))
 #endif
 #if defined(_M_IX86) || defined(__i386__)
-    #ifdef _MSC_VER
-        #define FASTCALL __fastcall
-        #define STDCALL __stdcall
-    #else
-        #define FASTCALL __attribute__((fastcall))
-        #define STDCALL __attribute__((stdcall))
-    #endif
+#ifdef _MSC_VER
+#define FASTCALL __fastcall
+#define STDCALL __stdcall
 #else
-    #define FASTCALL
-    #define STDCALL
+#define FASTCALL __attribute__((fastcall))
+#define STDCALL __attribute__((stdcall))
+#endif
+#else
+#define FASTCALL
+#define STDCALL
 #endif
 
-typedef struct BFG {
+typedef struct BFG
+{
     int8_t a;
-    char _pad1[7]; short e;
+    char _pad1[7];
+    short e;
     int64_t b;
     signed char c;
     const char *d;
-    struct {
+    struct
+    {
         float f;
         double g;
     } inner;
 } BFG;
 
-typedef struct Vec2 {
+typedef struct Vec2
+{
     double x;
     double y;
 } Vec2;
@@ -80,7 +84,8 @@ typedef int IntCallback(int x);
 typedef int VectorCallback(int len, Vec2 *vec);
 typedef int SortCallback(const void *ptr1, const void *ptr2);
 typedef int CharCallback(int idx, char c);
-typedef struct StructCallbacks {
+typedef struct StructCallbacks
+{
     IntCallback *first;
     IntCallback *second;
     IntCallback *third;
@@ -138,7 +143,8 @@ EXPORT int ApplyStd(int a, int b, int c, ApplyCallback *func)
 
 EXPORT int ApplyMany(int x, IntCallback **callbacks, int length)
 {
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++)
+    {
         x = (callbacks[i])(x);
     }
 
@@ -166,9 +172,32 @@ EXPORT int CallIndirect(int x)
     return callback(x);
 }
 
+static StructCallbacks *callbacks;
+
+EXPORT void SetCallbacks(StructCallbacks *cbs)
+{
+    callbacks = cbs;
+}
+
+EXPORT int CallFirstInCallbacks(int x)
+{
+    return callbacks->first(x);
+}
+
+EXPORT int CallSecondInCallbacks(int x)
+{
+    return callbacks->second(x);
+}
+
+EXPORT int CallThirdInCallbacks(int x)
+{
+    return callbacks->third(x);
+}
+
 #ifdef _WIN32
 
-typedef struct CallContext {
+typedef struct CallContext
+{
     IntCallback *callback;
     int *ptr;
 } CallContext;
@@ -189,7 +218,8 @@ EXPORT int CallThreaded(IntCallback *func, int x)
     ctx.ptr = &x;
 
     HANDLE h = CreateThread(NULL, 0, CallThreadedFunc, &ctx, 0, NULL);
-    if (!h) {
+    if (!h)
+    {
         perror("CreateThread");
         exit(1);
     }
@@ -202,7 +232,8 @@ EXPORT int CallThreaded(IntCallback *func, int x)
 
 #else
 
-typedef struct CallContext {
+typedef struct CallContext
+{
     IntCallback *callback;
     int *ptr;
 } CallContext;
@@ -223,7 +254,8 @@ EXPORT int CallThreaded(IntCallback *func, int x)
     ctx.ptr = &x;
 
     pthread_t thread;
-    if (pthread_create(&thread, NULL, CallThreadedFunc, &ctx)) {
+    if (pthread_create(&thread, NULL, CallThreadedFunc, &ctx))
+    {
         perror("pthread_create");
         exit(1);
     }
@@ -239,7 +271,8 @@ EXPORT int MakeVectors(int len, VectorCallback *func)
 {
     Vec2 vectors[512];
 
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++)
+    {
         vectors[i].x = (double)i;
         vectors[i].y = (double)-i;
     }
@@ -280,9 +313,10 @@ EXPORT const char *FmtRepeat(RepeatCallback *cb)
 
     int len = strlen(str);
     int total = len * repeat + 1;
-    char *copy = malloc(total); 
+    char *copy = malloc(total);
 
-    for (int i = 0, j = 0; i < repeat; i++, j += len) {
+    for (int i = 0, j = 0; i < repeat; i++, j += len)
+    {
         memcpy(copy + j, str, len);
     }
     copy[total - 1] = 0;
